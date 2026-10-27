@@ -1,0 +1,31 @@
+name: Publish Docker image
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Download repository files
+        uses: actions/checkout@v6
+
+      - name: Sign in to GitHub Container Registry
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: echo "$GH_TOKEN" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Build image
+        run: |
+          docker build \
+            --label "org.opencontainers.image.source=https://github.com/Karl-Moussawmai/inventory-agent-docker" \
+            -t ghcr.io/karl-moussawmai/inventory-agent-docker:latest .
+
+      - name: Publish image
+        run: docker push ghcr.io/karl-moussawmai/inventory-agent-docker:latest
